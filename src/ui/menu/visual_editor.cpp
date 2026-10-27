@@ -769,7 +769,7 @@ void orbit_model(bool& orbiting, const preview_stage& stage)
 
 void menu_t::draw_visual_editor()
 {
-    const auto reveal = advance_reveal(m_visual_editor_animation, m_page == 2 && m_visual_group == 0);
+    const auto reveal = advance_reveal(m_visual_editor_animation, m_page == 0 && m_visual_group == 0);
     if (reveal <= 0.0f)
         return;
 

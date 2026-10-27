@@ -13,12 +13,9 @@
 #include <app/map_absence.hpp>
 #include <game/input/bindings.hpp>
 #include <game/input/action_state.hpp>
-#include <features/aimbot/aimbot.hpp>
 #include <features/misc/misc.hpp>
 #include <features/misc/auto_stop.hpp>
-#include <features/trigger/seed_trigger.hpp>
 #include <simulation/shot_state.hpp>
-#include <simulation/seed_schedule.hpp>
 #include <features/visuals/visuals.hpp>
 
 namespace app::workers
@@ -53,21 +50,8 @@ std::atomic<std::uint64_t> g_game_iter{0};
     }
 
     const auto config = snapshot->combat.get(game::local_player().weapon_type());
-    bool rcs_requested{};
-    if (config.aimbot.rcs.enabled)
-        rcs_requested = game::physical_action_down(game::input_action::attack, app::context().input);
-    if (rcs_requested || config.other.penetration_crosshair ||
-        (config.aimbot.enabled &&
-         config::combat_profile::activation_active(config.aimbot.activation_mode, config.aimbot.key)))
-    {
+    if (config.other.penetration_crosshair)
         return true;
-    }
-    const auto independent_seed = config.triggerbot.seed_type != config::combat_profile::seed_mode::none;
-    if (config.triggerbot.enabled && !independent_seed &&
-        config::combat_profile::activation_active(config.triggerbot.activation_mode, config.triggerbot.key))
-    {
-        return true;
-    }
     const auto& grenade = snapshot->combat.global.grenade_aim;
     return grenade.enabled && key_down(grenade.key);
 }
@@ -354,7 +338,7 @@ void watchdog(control control)
 
 void combat(control control)
 {
-    // 250 Hz lets the seed trigger react within one server tick (15.625 ms at 64 Hz).
+    // Ballistics sampling cadence: high enough for sub-tick visuals, cheap enough to stay off the game thread.
     constexpr auto target_tps{250};
     constexpr auto tick_interval = std::chrono::nanoseconds(1'000'000'000 / target_tps);
     auto next_tick = std::chrono::steady_clock::now();
@@ -364,25 +348,10 @@ void combat(control control)
         std::optional<diagnostics::performance::scope> combat_profile{};
         combat_profile.emplace(diagnostics::performance::zone::combat_loop);
         if (game::local_player().valid() && app::context().overlay.combat_input_ready() &&
-            !app::context().menu.is_open())
+            !app::context().menu.is_open() && shared_ballistics_requested())
         {
-            if (shared_ballistics_requested())
-            {
-                VESTA_PERF_SCOPE(ballistics_tick);
-                simulation::ballistics().tick();
-            }
-            {
-                VESTA_PERF_SCOPE(aim_tick);
-                features::aimbot::aim().tick();
-            }
-            {
-                VESTA_PERF_SCOPE(grenade_aim_tick);
-                features::aimbot::grenade_aim().tick();
-            }
-        }
-        else
-        {
-            features::aimbot::aim().reset();
+            VESTA_PERF_SCOPE(ballistics_tick);
+            simulation::ballistics().tick();
         }
 
         combat_profile.reset();
@@ -444,51 +413,5 @@ void nade_helper(control control)
     }
 }
 
-void seed_trigger(control control)
-{
-    auto latency_priority = false;
-    ::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-    THREAD_POWER_THROTTLING_STATE power_state{THREAD_POWER_THROTTLING_CURRENT_VERSION,
-                                              THREAD_POWER_THROTTLING_EXECUTION_SPEED, 0};
-    (void)::SetThreadInformation(::GetCurrentThread(), ThreadPowerThrottling, &power_state, sizeof(power_state));
-
-    const platform::windows::precise_worker_wait wait(control);
-
-    while (!control.stopping())
-    {
-        auto& runtime = features::trigger::seed_trigger();
-        const auto snapshot = config::get_runtime_snapshot();
-        bool can_run{};
-        bool configured{};
-        bool latency_requested{};
-        {
-            VESTA_PERF_SCOPE(seed_trigger_tick);
-            can_run = app::context().overlay.combat_input_ready() && !app::context().menu.is_open();
-            configured = snapshot && snapshot->combat.seed_trigger_configured();
-            if (!can_run)
-                runtime.reset();
-
-            if (can_run && configured)
-            {
-                const auto controller =
-                    app::context().process.load<std::uintptr_t>(app::context().addresses.local_player_controller);
-                const auto binding = game::resolve_local_pawn(controller);
-                const auto tick = simulation::read_seed_tick(controller, binding.pawn);
-                const auto observed_at = std::chrono::steady_clock::now();
-                runtime.sync_phase(tick, observed_at);
-            }
-            latency_requested = can_run ? runtime.poll() : false;
-            if (latency_requested != latency_priority)
-            {
-                latency_priority = latency_requested;
-                ::SetThreadPriority(::GetCurrentThread(),
-                                    latency_priority ? THREAD_PRIORITY_HIGHEST : THREAD_PRIORITY_NORMAL);
-            }
-        }
-
-        wait.wait(simulation::seed_schedule::poll_interval(can_run && runtime.input_pending(),
-                                                           can_run && configured && latency_requested));
-    }
-}
 
 } // namespace app::workers

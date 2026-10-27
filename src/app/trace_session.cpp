@@ -62,7 +62,6 @@ void initialize()
                         if (std::filesystem::exists(root / "STOP"))
                             break;
                         const auto map = game::level().name();
-                        const auto config = config::get_runtime_snapshot();
                         const nlohmann::json row{
                             {"event", "scene"},
                             {"qpc", simulation::shot_trace::qpc_now()},
@@ -72,10 +71,7 @@ void initialize()
                             {"map", map ? *map : ""},
                             {"collision_ready", simulation::collision().valid()},
                             {"menu_open", render::menu_open()},
-                            {"combat_input_ready", render::combat_input_ready()},
-                            {"seed_configured", config->combat.seed_trigger_configured()},
-                            {"trigger_key", config->combat.global.triggerbot_key},
-                            {"activation_mode", static_cast<int>(config->combat.global.triggerbot_activation_mode)}};
+                            {"combat_input_ready", render::combat_input_ready()}};
                         file << row.dump() << '\n';
                         file.flush();
                     }

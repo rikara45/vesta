@@ -164,8 +164,7 @@ void local_state::update()
     if (alive_now)
     {
         crosshair = g_memory->process.load<std::int32_t>(pawn_address + SCHEMA("C_CSPlayerPawn", "m_iIDEntIndex"_id));
-        const auto combat = snapshot->combat.get(game::local_player().weapon_type());
-        if (snapshot->visual.m_no_flash.enabled || combat.aimbot.checks.flashed || combat.triggerbot.checks.flashed)
+        if (snapshot->visual.m_no_flash.enabled)
         {
             flash_alpha =
                 g_memory->process.load<float>(pawn_address + SCHEMA("C_CSPlayerPawnBase", "m_flFlashOverlayAlpha"_id));

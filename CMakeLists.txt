@@ -102,17 +102,6 @@ set(vesta_sources
     src/game/body/skeleton.cpp
 
     # features
-    src/features/aimbot/aimbot.cpp
-    src/features/aimbot/aimbot_seed.cpp
-    src/features/aimbot/aimbot_target.cpp
-    src/features/aimbot/aimbot_recoil.cpp
-    src/features/aimbot/aimbot_trigger.cpp
-    src/features/aimbot/aimbot_internal.cpp
-    src/features/aimbot/command_ring.cpp
-    src/features/aimbot/grenade_aim.cpp
-    src/features/trigger/seed_trigger.cpp
-    src/features/aimbot/seed_plan.cpp
-    src/features/aimbot/seed_state.cpp
     src/features/visuals/bomb.cpp
     src/features/visuals/bullet_impacts.cpp
     src/features/visuals/crosshair.cpp
@@ -143,10 +132,6 @@ set(vesta_sources
     src/ui/menu/layout.cpp
     src/ui/menu/popups.cpp
     src/ui/menu/visual_editor.cpp
-    src/ui/menu/combat_page.cpp
-    src/ui/menu/combat_widgets.cpp
-    src/ui/menu/aimbot_page.cpp
-    src/ui/menu/triggerbot_page.cpp
     src/ui/menu/visuals_page.cpp
     src/ui/menu/misc_page.cpp
     src/ui/menu/configs_page.cpp

@@ -1108,31 +1108,7 @@ void panels::draw_keybind_list(const bool interactive)
     if (!cfg.enabled)
         return;
     std::vector<compact_panel_row> rows{};
-    const auto combat = config::combat_settings.get(game::local_player().weapon_type());
-    const auto mode_visible = [&](const int mode)
-    {
-        return mode == config::combat_profile::activation::always   ? cfg.show_always
-               : mode == config::combat_profile::activation::toggle ? cfg.show_toggle
-                                                                    : cfg.show_hold;
-    };
-    const auto add_combat = [&](std::string name, const bool enabled, const int mode, const int key)
-    {
-        if (!enabled || !mode_visible(mode) || !config::combat_profile::activation_active(mode, key))
-            return;
-        const auto* mode_name = mode == config::combat_profile::activation::always   ? "always"
-                                : mode == config::combat_profile::activation::toggle ? "toggle"
-                                                                                     : "hold";
-        rows.push_back({std::format("{}  [{}]", std::move(name), mode_name), k_wm_text});
-    };
-    add_combat("Aimbot", combat.aimbot.enabled, combat.aimbot.activation_mode, combat.aimbot.key);
-    add_combat("Trigger", combat.triggerbot.enabled, combat.triggerbot.activation_mode, combat.triggerbot.key);
     const auto& global = config::combat_settings.global;
-    add_combat(std::format("Aim Damage: {}", static_cast<int>(std::lround(global.aimbot_min_damage_override))),
-               global.aimbot_enabled && global.aimbot_min_damage_override_enabled,
-               global.aimbot_min_damage_override_mode, global.aimbot_min_damage_override_key);
-    add_combat(std::format("Trigger Damage: {}", static_cast<int>(std::lround(global.triggerbot_min_damage_override))),
-               global.triggerbot_enabled && global.triggerbot_min_damage_override_enabled,
-               global.triggerbot_min_damage_override_mode, global.triggerbot_min_damage_override_key);
     const auto& player_esp = config::visual_settings.m_player;
     const auto visual_mode_visible = [&](const int mode)
     {

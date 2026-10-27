@@ -139,14 +139,7 @@ struct sampling_demand
     const auto snapshot = config::get_runtime_snapshot();
     if (!snapshot)
         return {};
-    const auto combat = snapshot->combat.get(game::local_player().weapon_type());
-    const auto independent_seed = combat.triggerbot.seed_type != config::combat_profile::seed_mode::none;
     const auto combat_players =
-        (combat.aimbot.enabled && combat.aimbot.draw_fov) ||
-        (combat.aimbot.enabled &&
-         config::combat_profile::activation_active(combat.aimbot.activation_mode, combat.aimbot.key)) ||
-        (combat.triggerbot.enabled && !independent_seed &&
-         config::combat_profile::activation_active(combat.triggerbot.activation_mode, combat.triggerbot.key)) ||
         (snapshot->combat.global.grenade_aim.enabled && key_down(snapshot->combat.global.grenade_aim.key));
     const auto& radar_cfg = snapshot->visual.m_radar;
     const auto radar_active = radar_cfg.active();
@@ -164,9 +157,7 @@ struct sampling_demand
                           snapshot->visual.m_radar.show_grenade_zones)) ||
         snapshot->general.m_grenades.enabled ||
         (snapshot->visual.m_player.active() && snapshot->visual.m_player.m_legit_sync.enabled &&
-         snapshot->visual.m_player.m_legit_sync.direct_visible) ||
-        (combat.aimbot.enabled && combat.aimbot.checks.smoke) ||
-        (combat.triggerbot.enabled && combat.triggerbot.checks.smoke);
+         snapshot->visual.m_player.m_legit_sync.direct_visible);
     const auto spectators = game::world().script_demand(game::script_data_demand::spectators) ||
                             snapshot->general.m_spectator_list.enabled || snapshot->visual.m_player.spectator_sync;
     const auto directory = players || items || projectiles || spectators || snapshot->visual.m_bomb.enabled;

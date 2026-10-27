@@ -90,7 +90,6 @@ void runtime_session::start_workers()
     start(movement, workers::movement);
     start(combat, workers::combat);
     start(lineup, workers::nade_helper);
-    start(seed_trigger, workers::seed_trigger);
 #if defined(VESTA_ENABLE_CONSOLE) && VESTA_ENABLE_CONSOLE
     start(watchdog, workers::watchdog);
 #endif

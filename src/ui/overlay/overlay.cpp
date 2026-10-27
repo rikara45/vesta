@@ -19,7 +19,6 @@
 #include <scripting/runtime.hpp>
 #include <config/hotkeys.hpp>
 #include <config/library.hpp>
-#include <features/aimbot/aimbot.hpp>
 #include <features/misc/misc.hpp>
 #include <features/misc/auto_stop.hpp>
 #include <features/visuals/visuals.hpp>
@@ -106,7 +105,7 @@ constexpr bool k_use_composition_backend = true;
            misc.m_nade_helper.enabled || misc.m_watermark.enabled || misc.m_spectator_list.enabled ||
            misc.m_event_log.enabled || misc.m_keybind_list.enabled || misc.m_bullet_tracers.enabled ||
            misc.m_hitmarker.enabled || misc.m_hitsound.enabled || misc.m_hitsound.show_damage ||
-           (combat.aimbot_enabled && combat.aimbot_draw_fov) || combat.penetration_crosshair;
+           combat.penetration_crosshair;
 }
 
 void write_overlay_backend_diagnostic(bool window_in_band, bool tracker_enabled, DWORD tracker_error,
@@ -410,7 +409,6 @@ void overlay_t::release_input_for_exit()
 {
     ::ClipCursor(nullptr);
     set_menu_hit_testing(false);
-    features::aimbot::aim().reset();
     const std::array movement_releases{
         platform::windows::input_gateway::key_transition{VK_CONTROL, false},
         platform::windows::input_gateway::key_transition{VK_F24, false},
@@ -535,7 +533,6 @@ void overlay_t::draw_world(render::draw::draw_list& draw_list)
         features::visuals::grenade_prediction().on_render(draw_list);
         features::misc::nade_helper().on_render(draw_list);
         features::visuals::bullet_impacts().on_render(draw_list);
-        features::aimbot::aim().on_render(draw_list);
     }
 }
 

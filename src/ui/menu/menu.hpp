@@ -27,10 +27,6 @@ private:
     void draw_content();
     void draw_guide();
     void draw_visual_editor();
-    void begin_combat_page(bool triggerbot);
-    void end_combat_page();
-    void draw_aimbot();
-    void draw_triggerbot();
     void draw_visuals();
     void draw_misc();
     void reset_content_animation();
